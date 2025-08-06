@@ -1,0 +1,9 @@
+pydantic
+pymongo
+python-dotenv
+openai
+streamlit
+requests
+langchain
+newspaper3k
+beautifulsoup4
