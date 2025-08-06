@@ -7,3 +7,5 @@ requests
 langchain
 newspaper3k
 beautifulsoup4
+fastapi
+uvicorn
