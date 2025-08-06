@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException, Body
 from typing import List, Optional
 from pydantic import BaseModel
-from agents.fetcher import FetcherAgent
-from db.database import get_database
+from Glacier.agents.fetcher import FetcherAgent
+from Glacier.agents.classifier import ClassifierAgent
+from Glacier.agents.formatter import FormatterAgent
+from Glacier.db.database import get_database
 from bson.objectid import ObjectId
 
 app = FastAPI()
@@ -13,6 +15,33 @@ def get_news(keywords: Optional[List[str]] = None):
     fetcher = FetcherAgent()
     articles = fetcher.fetch_news(keywords)
     return articles
+
+# --- CLASSIFY-FETCH-FORMAT ENDPOINT ---
+class ClassifyFetchFormatRequest(BaseModel):
+    region: Optional[str] = None
+    category: Optional[str] = None
+    game: Optional[str] = None
+
+@app.post("/classify-fetch-format")
+def classify_fetch_format(payload: ClassifyFetchFormatRequest):
+    # Build keywords list from non-null fields
+    keywords = []
+    if payload.region:
+        keywords.append(payload.region)
+    if payload.category:
+        keywords.append(payload.category)
+    if payload.game:
+        keywords.append(payload.game)
+    fetcher = FetcherAgent()
+    classifier = ClassifierAgent()
+    formatter = FormatterAgent()
+    articles = fetcher.fetch_news(keywords if keywords else None)
+    results = []
+    for article in articles:
+        tags = classifier.classify(article)
+        formatted = formatter.format_output({**article, 'tags': tags})
+        results.append(formatted)
+    return results
 
 # --- WISHLIST MODELS ---
 class WishlistItem(BaseModel):
